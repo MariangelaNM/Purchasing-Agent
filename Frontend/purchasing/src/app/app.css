@@ -1,0 +1,25 @@
+:host {
+  display: block;
+}
+
+.app-nav {
+  display: flex;
+  justify-content: center;
+  gap: 32px;
+  padding: 22px 24px 0;
+}
+
+.app-nav a {
+  padding-bottom: 8px;
+  border-bottom: 2px solid transparent;
+  color: #78847f;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.app-nav a:hover,
+.app-nav a.active {
+  border-color: #c9824d;
+  color: #183b3b;
+}

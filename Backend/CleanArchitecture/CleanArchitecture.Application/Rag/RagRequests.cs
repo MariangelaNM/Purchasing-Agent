@@ -11,11 +11,11 @@ public sealed record IngestDocumentsRequest(
 public sealed record SearchDocumentsRequest(
     string Query,
     SearchMode Mode = SearchMode.Hybrid,
-    int Top = 5
+    int Top = 3
 );
 
 public sealed record AskQuestionRequest(
     string Question,
     SearchMode Mode = SearchMode.Hybrid,
-    int Top = 5
+    int Top = 3
 );
