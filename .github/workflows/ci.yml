@@ -1,0 +1,163 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Backend (.NET 10)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Backend/CleanArchitecture
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Cache NuGet
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('Backend/CleanArchitecture/**/*.csproj') }}
+          restore-keys: nuget-${{ runner.os }}-
+
+      - name: Restore
+        run: dotnet restore CleanArchitecture.sln
+
+      - name: Build
+        run: dotnet build CleanArchitecture.sln --no-restore --configuration Release --nologo
+
+      - name: Test
+        run: >
+          dotnet test CleanArchitecture.sln
+          --no-build
+          --configuration Release
+          --nologo
+          --logger "trx;LogFileName=unit-tests.trx"
+          --results-directory TestResults
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-test-results
+          path: Backend/CleanArchitecture/TestResults
+          if-no-files-found: ignore
+
+      - name: Smoke test API
+        run: |
+          set -euo pipefail
+
+          dotnet run \
+            --project CleanArchitecture.WebApi/CleanArchitecture.WebApi.csproj \
+            --configuration Release \
+            --no-build \
+            --urls http://127.0.0.1:5080 &
+
+          API_PID=$!
+          trap 'kill $API_PID 2>/dev/null || true' EXIT
+
+          READY=false
+          for i in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:5080/api/products > /dev/null 2>&1; then
+              echo "API is up after ${i}s"
+              READY=true
+              break
+            fi
+            if ! kill -0 $API_PID 2>/dev/null; then
+              echo "API process exited before becoming ready"
+              exit 1
+            fi
+            sleep 1
+          done
+
+          if [ "$READY" != "true" ]; then
+            echo "API did not become ready within 60s"
+            exit 1
+          fi
+
+          echo "GET /api/products"
+          curl -fsS http://127.0.0.1:5080/api/products
+          echo
+
+          echo "POST /api/products"
+          curl -fsS -X POST http://127.0.0.1:5080/api/products \
+            -H 'Content-Type: application/json' \
+            -d '{"name":"CI Product","description":"Created by CI","price":9.99}'
+          echo
+
+          echo "GET /api/products after POST"
+          curl -fsS http://127.0.0.1:5080/api/products
+          echo
+
+  frontend:
+    name: Frontend (Angular)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Frontend/purchasing
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: Frontend/purchasing/package-lock.json
+
+      - name: Install
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Test
+        run: npm test -- --watch=false
+
+      - name: Smoke test SSR server
+        run: |
+          set -euo pipefail
+
+          # Angular SSR rejects unknown Host headers unless they are allow-listed.
+          PORT=4000 NG_ALLOWED_HOSTS=localhost,127.0.0.1 \
+            node dist/purchasing/server/server.mjs &
+
+          SSR_PID=$!
+          trap 'kill $SSR_PID 2>/dev/null || true' EXIT
+
+          READY=false
+          for i in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:4000/ > /dev/null 2>&1; then
+              echo "SSR server is up after ${i}s"
+              READY=true
+              break
+            fi
+            if ! kill -0 $SSR_PID 2>/dev/null; then
+              echo "SSR server exited before becoming ready"
+              exit 1
+            fi
+            sleep 1
+          done
+
+          if [ "$READY" != "true" ]; then
+            echo "SSR server did not become ready within 60s"
+            exit 1
+          fi
+
+          curl -fsS http://127.0.0.1:4000/ | grep -q '<app-root'
+          echo "SSR returned the rendered Angular shell"
