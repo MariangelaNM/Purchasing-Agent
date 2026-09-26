@@ -1,0 +1,50 @@
+<main class="page-shell">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">GESTION DOCUMENTAL</p>
+      <h1>Archivos de conocimiento</h1>
+      <p class="subtitle">Carga documentos y consulta todo lo que ya está disponible para el asistente.</p>
+    </div>
+    <div class="header-mark" aria-hidden="true">DOC</div>
+  </header>
+
+  <section class="upload-card" aria-labelledby="upload-title">
+    <div class="section-heading">
+      <div><p class="eyebrow">NUEVA CARGA</p><h2 id="upload-title">Añadir documentos</h2></div>
+      <span class="file-types">PDF · DOCX · TXT · MD</span>
+    </div>
+    <label class="drop-zone" for="file-input">
+      <span class="upload-icon" aria-hidden="true">+</span>
+      <span class="drop-title">Selecciona uno o varios archivos</span>
+      <span class="drop-description">Los documentos se procesarán e indexarán automáticamente.</span>
+      <input id="file-input" type="file" multiple accept=".pdf,.docx,.txt,.md" (change)="onFilesSelected($event)" />
+    </label>
+    @if (selectedFiles().length) {
+      <div class="selection-row">
+        <div><strong>{{ selectedFiles().length }} archivo(s) seleccionado(s)</strong><span>{{ selectedFiles().map(file => file.name).join(', ') }}</span></div>
+        <button class="text-button" type="button" (click)="clearSelection()">Limpiar</button>
+      </div>
+    }
+    <div class="upload-actions">
+      <span class="status" [class.status-error]="error()" [class.status-success]="message()">{{ error() || message() || 'El tamaño y formato se validan al cargar.' }}</span>
+      <button class="primary-button" type="button" [disabled]="uploading()" (click)="uploadFiles()">{{ uploading() ? 'Cargando...' : 'Cargar archivos' }}</button>
+    </div>
+  </section>
+
+  <section class="library-section" aria-labelledby="library-title">
+    <div class="library-heading">
+      <div><p class="eyebrow">BIBLIOTECA</p><h2 id="library-title">Archivos cargados</h2></div>
+      <button class="refresh-button" type="button" [disabled]="loading()" (click)="loadFiles()">{{ loading() ? 'Consultando...' : 'Actualizar' }}</button>
+    </div>
+    <label class="search-box"><span aria-hidden="true">/</span><input type="search" placeholder="Buscar por nombre de archivo" [value]="searchTerm()" (input)="updateSearch($event)" /></label>
+    @if (!loading() && !filteredFiles().length) {
+      <div class="empty-state"><strong>{{ searchTerm() ? 'No encontramos coincidencias' : 'Aún no hay archivos cargados' }}</strong><span>{{ searchTerm() ? 'Prueba con otro nombre.' : 'Carga tu primer documento para comenzar.' }}</span></div>
+    } @else {
+      <div class="file-list">
+        @for (file of filteredFiles(); track file.sourceFile) {
+          <article class="file-row"><div class="file-badge">FILE</div><div class="file-details"><strong>{{ formatFileName(file.sourceFile) }}</strong><span>Documento indexado</span></div><div class="chunk-count"><strong>{{ file.chunksIndexed }}</strong><span>fragmentos</span></div></article>
+        }
+      </div>
+    }
+  </section>
+</main>

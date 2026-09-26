@@ -177,6 +177,29 @@ public sealed class DocumentsController(IDocumentRagService documentRagService) 
         }
     }
 
+    [HttpGet("{fileName}/info")]
+    public async Task<ActionResult<IndexedDocumentResponse>> GetDocumentInfo(
+        string fileName,
+        CancellationToken cancellationToken
+    )
+    {
+        try
+        {
+            var document = (await documentRagService.ListDocumentsAsync(cancellationToken))
+                .FirstOrDefault(item => string.Equals(item.SourceFile, fileName, StringComparison.OrdinalIgnoreCase));
+
+            return document is null ? NotFound() : Ok(document);
+        }
+        catch (HttpRequestException exception)
+        {
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, new { error = exception.Message });
+        }
+        catch (InvalidOperationException exception)
+        {
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, new { error = exception.Message });
+        }
+    }
+
     private static bool IsSupportedDocument(string fileName) =>
         new[] { ".txt", ".md", ".pdf", ".docx" }.Contains(
             Path.GetExtension(fileName),
