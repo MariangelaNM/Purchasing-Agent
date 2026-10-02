@@ -1,0 +1,24 @@
+import { Injectable, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class ApiService {
+  private readonly http = inject(HttpClient);
+  private readonly apiUrl = environment.apiUrl;
+
+  get<T>(endpoint: string): Observable<T> {
+    return this.http.get<T>(`${this.apiUrl}/${endpoint}`);
+  }
+
+  post<TRequest, TResponse>(endpoint: string, body: TRequest): Observable<TResponse> {
+    return this.http.post<TResponse>(`${this.apiUrl}/${endpoint}`, body);
+  }
+
+  put<TRequest, TResponse>(endpoint: string, body: TRequest): Observable<TResponse> {
+    return this.http.put<TResponse>(`${this.apiUrl}/${endpoint}`, body);
+  }
+}
