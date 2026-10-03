@@ -1,6 +1,8 @@
 using CleanArchitecture.Application.Interfaces;
 using CleanArchitecture.Application.Rag;
 using CleanArchitecture.Application.Services;
+using CleanArchitecture.Domain.Entities;
+using CleanArchitecture.Domain.Interfaces;
 using CleanArchitecture.Domain.Rag;
 
 namespace CleanArchitecture.UnitTests.Application;
@@ -16,7 +18,8 @@ public sealed class DocumentRagServiceTests
             new FakeChunker(),
             new FakeEmbeddingGenerator(),
             index,
-            new FakeAnswerGenerator());
+            new FakeAnswerGenerator(),
+            new FakeProductRepository());
 
         var result = await service.IngestAsync(new IngestDocumentsRequest("C:\\documents"));
 
@@ -33,16 +36,20 @@ public sealed class DocumentRagServiceTests
     {
         var chunk = CreateChunk();
         var index = new FakeChunkIndex { SearchResults = [new SearchResult(chunk, 0.5)] };
+        var answerGenerator = new FakeAnswerGenerator("Grounded answer [1].");
         var service = new DocumentRagService(
             new FakeDocumentReader([]), new FakeChunker(), new FakeEmbeddingGenerator(), index,
-            new FakeAnswerGenerator("Grounded answer [1]."));
+            answerGenerator, new FakeProductRepository());
 
         var result = await service.AskAsync(new AskQuestionRequest("What is documented?"));
 
         Assert.Equal("Grounded answer [1].", result.Answer);
-        var source = Assert.Single(result.Sources);
+        Assert.Equal(2, result.Sources.Count);
+        var source = result.Sources[0];
         Assert.Equal(chunk.SourceFile, source.SourceFile);
         Assert.Equal(0.5, source.Score);
+        Assert.Equal("Inventario SQL", result.Sources[1].SourceFile);
+        Assert.Contains("Stock disponible: 6", answerGenerator.Context[1].Chunk.Content);
     }
 
     private static DocumentChunk CreateChunk() => new()
@@ -91,6 +98,23 @@ public sealed class DocumentRagServiceTests
 
     private sealed class FakeAnswerGenerator(string answer = "answer") : IAnswerGenerator
     {
-        public Task<string> GenerateAsync(string question, IReadOnlyList<SearchResult> context, CancellationToken cancellationToken = default) => Task.FromResult(answer);
+        public IReadOnlyList<SearchResult> Context { get; private set; } = [];
+
+        public Task<string> GenerateAsync(string question, IReadOnlyList<SearchResult> context, CancellationToken cancellationToken = default)
+        {
+            Context = context;
+            return Task.FromResult(answer);
+        }
+    }
+
+    private sealed class FakeProductRepository : IProductRepository
+    {
+        private readonly List<Product> _products = [new Product("ThinkPad", "Business laptop", 1000m, 6)];
+
+        public Task<Product> GetByIdAsync(int id) => Task.FromResult(_products[0]);
+        public Task<IEnumerable<Product>> GetAllAsync() => Task.FromResult<IEnumerable<Product>>(_products);
+        public Task<Product> AddAsync(Product product) => Task.FromResult(product);
+        public Task UpdateAsync(Product product) => Task.CompletedTask;
+        public Task DeleteAsync(int id) => Task.CompletedTask;
     }
 }

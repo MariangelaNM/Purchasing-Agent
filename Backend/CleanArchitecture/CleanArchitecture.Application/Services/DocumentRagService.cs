@@ -1,6 +1,8 @@
 using System.Diagnostics;
 using CleanArchitecture.Application.Interfaces;
 using CleanArchitecture.Application.Rag;
+using CleanArchitecture.Domain.Entities;
+using CleanArchitecture.Domain.Interfaces;
 using CleanArchitecture.Domain.Rag;
 
 namespace CleanArchitecture.Application.Services;
@@ -10,7 +12,8 @@ public sealed class DocumentRagService(
     ITextChunker chunker,
     IEmbeddingGenerator embeddingGenerator,
     IChunkIndex chunkIndex,
-    IAnswerGenerator answerGenerator
+    IAnswerGenerator answerGenerator,
+    IProductRepository productRepository
 ) : IDocumentRagService
 {
     public async Task<IngestionResult> IngestAsync(
@@ -100,12 +103,14 @@ public sealed class DocumentRagService(
             request.Top,
             cancellationToken
         );
+        var inventory = await productRepository.GetAllAsync();
+        var answerContext = results.Concat([CreateInventoryContext(inventory)]).ToList();
         var answer = await answerGenerator.GenerateAsync(
             request.Question,
-            results,
+            answerContext,
             cancellationToken
         );
-        return new AnswerQuestionResponse(answer, results.Select(ToResponse).ToList());
+        return new AnswerQuestionResponse(answer, answerContext.Select(ToResponse).ToList());
     }
 
     public async Task<IReadOnlyList<RetrievedChunkResponse>> ListChunksAsync(
@@ -137,6 +142,28 @@ public sealed class DocumentRagService(
             result.Chunk.Content,
             result.Score
         );
+
+    private static SearchResult CreateInventoryContext(IEnumerable<Product> products)
+    {
+        var rows = products.Select(product =>
+            $"Producto: {product.Name} | Precio unitario: {product.Price:0.00} | Stock disponible: {product.Stock?.Quantity ?? 0}"
+        );
+        var content = string.Join("\n", rows);
+        if (string.IsNullOrWhiteSpace(content))
+            content = "No hay productos registrados en el inventario.";
+
+        return new SearchResult(
+            new DocumentChunk
+            {
+                Id = "inventory-sql#0",
+                SourceFile = "Inventario SQL",
+                Ordinal = 0,
+                Content = content,
+                Embedding = [],
+            },
+            1
+        );
+    }
 
     private static void ValidateFolderPath(string folderPath)
     {
