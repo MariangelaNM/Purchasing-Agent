@@ -1,0 +1,38 @@
+<main class="inventory-shell">
+  <header class="inventory-header">
+    <div>
+      <p class="eyebrow">OPERACIÓN</p>
+      <h1>Stock de productos</h1>
+      <p class="subtitle">Registra los productos cargados y consulta sus existencias en tiempo real desde SQL.</p>
+    </div>
+    <div class="header-mark">SQL</div>
+  </header>
+
+  <section class="product-form" aria-labelledby="form-title">
+    <div><p class="eyebrow">NUEVO PRODUCTO</p><h2 id="form-title">Añadir al inventario</h2></div>
+    <div class="form-grid">
+      <label>Nombre<input [ngModel]="form().name" (ngModelChange)="updateField('name', $event)" placeholder="Ej. Teclado inalámbrico" /></label>
+      <label>Descripción<input [ngModel]="form().description" (ngModelChange)="updateField('description', $event)" placeholder="Detalle opcional" /></label>
+      <label>Precio<input type="number" min="0.01" step="0.01" [ngModel]="form().price" (ngModelChange)="updateField('price', +$event)" /></label>
+      <label>Stock inicial<input type="number" min="0" step="1" [ngModel]="form().stock" (ngModelChange)="updateField('stock', +$event)" /></label>
+    </div>
+    <div class="form-footer">
+      <span class="status status-error">{{ error() }}</span><span class="status status-success">{{ message() }}</span>
+      <button class="primary-button" type="button" [disabled]="saving()" (click)="saveProduct()">{{ saving() ? 'Guardando...' : 'Guardar producto' }}</button>
+    </div>
+  </section>
+
+  <section class="stock-section" aria-labelledby="stock-title">
+    <div class="section-heading"><div><p class="eyebrow">INVENTARIO</p><h2 id="stock-title">Productos cargados</h2></div><button class="refresh-button" type="button" (click)="loadProducts()">Actualizar</button></div>
+    <label class="search-box"><span>/</span><input type="search" placeholder="Buscar producto" [value]="search()" (input)="updateSearch($any($event.target).value)" /></label>
+    @if (!loading() && !filteredProducts().length) {
+      <div class="empty-state">Aún no hay productos en el inventario.</div>
+    } @else {
+      <div class="product-list">
+        @for (product of filteredProducts(); track product.id) {
+          <article class="product-row"><div class="product-icon">SKU</div><div class="product-details"><strong>{{ product.name }}</strong><span>{{ product.description || 'Sin descripción' }} · ${{ product.price | number:'1.2-2' }}</span></div><div class="stock-count" [class.low-stock]="product.stock < 5"><strong>{{ product.stock }}</strong><span>unidades</span></div></article>
+        }
+      </div>
+    }
+  </section>
+</main>

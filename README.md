@@ -2,6 +2,18 @@
 
 ## Installation
 
+### Base de datos de productos
+
+Ejecuta `Database/PurchasingDb.sql` en SQL Server Management Studio o Azure Data Studio. El script crea la base `PurchasingDb`, las tablas `Products` y `Stocks` relacionadas por FK, y carga modelos de Lenovo, HP, Dell y Samsung basados en las fichas de `official-specifications`.
+
+La API usa por defecto:
+
+```text
+Server=localhost;Database=PurchasingDb;Trusted_Connection=True;TrustServerCertificate=True;
+```
+
+Si tu servidor es diferente, configura la variable `SQL_CONNECTION_STRING`.
+
 ### Docker Desktop
 
 [Download Docker Desktop for Windows](https://docs.docker.com/desktop/setup/install/windows-install/)

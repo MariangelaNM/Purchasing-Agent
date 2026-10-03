@@ -21,9 +21,16 @@ builder.Services.AddCors(options =>
         policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod())
 );
 
-// Register dependencies And Use InMemory Database
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? Environment.GetEnvironmentVariable("SQL_CONNECTION_STRING");
+
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseInMemoryDatabase("CleanArchitectureDb"));
+{
+    if (string.IsNullOrWhiteSpace(connectionString))
+        options.UseInMemoryDatabase("CleanArchitectureDb");
+    else
+        options.UseSqlServer(connectionString);
+});
 
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<IProductService, ProductService>();

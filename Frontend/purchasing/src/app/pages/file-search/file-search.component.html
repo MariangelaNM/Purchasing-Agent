@@ -1,39 +1,40 @@
 <main class="search-page">
   <header class="search-header">
-    <p class="eyebrow">CONSULTA INTELIGENTE</p>
-    <h1>Busca respuestas en tus archivos</h1>
-    <p class="subtitle">Combina coincidencias semánticas y de texto para encontrar los tres fragmentos más relevantes.</p>
+    <p class="eyebrow">ASK THE KNOWLEDGE</p>
+    <h1>Pregunta a tu conocimiento</h1>
+    <p class="subtitle">Haz una pregunta sobre los documentos cargados y recibe una respuesta construida con sus fuentes.</p>
   </header>
 
-  <section class="search-panel" aria-label="Búsqueda híbrida">
+  <section class="search-panel" aria-label="Pregunta al conocimiento">
     <div class="search-input-wrap">
       <span aria-hidden="true">/</span>
       <input
         type="search"
         autofocus
-        placeholder="Ej. condiciones de entrega para proveedores"
+        placeholder="Ej. ¿Cuáles son las condiciones de entrega?"
         [value]="query()"
         (input)="updateQuery($event)"
         (keydown.enter)="search()"
       />
-      <button type="button" [disabled]="searching()" (click)="search()">{{ searching() ? 'Buscando...' : 'Buscar' }}</button>
+      <button type="button" [disabled]="searching()" (click)="search()">{{ searching() ? 'Pensando...' : 'Preguntar' }}</button>
     </div>
-    <div class="search-meta"><span class="hybrid-tag">HIBRIDA</span><span>Máximo 3 resultados relevantes</span></div>
+    <div class="search-meta"><span class="hybrid-tag">RAG</span><span>Respuesta basada en tus documentos</span></div>
     @if (error()) { <p class="error-message">{{ error() }}</p> }
   </section>
 
   @if (!searched() && !searching()) {
-    <div class="intro-state"><span class="intro-mark">3</span><strong>Tu búsqueda aparecerá aquí</strong><span>Prueba con una pregunta, un concepto o una frase exacta.</span></div>
+    <div class="intro-state"><span class="intro-mark">?</span><strong>Tu respuesta aparecerá aquí</strong><span>Pregunta por políticas, productos o cualquier información de tus documentos.</span></div>
   }
 
-  @if (searched() && !results().length) {
-    <div class="intro-state"><span class="intro-mark">0</span><strong>No encontramos resultados</strong><span>Prueba con otros términos o una consulta más general.</span></div>
+  @if (searched() && !answer()) {
+    <div class="intro-state"><span class="intro-mark">0</span><strong>No encontramos una respuesta</strong><span>Prueba con una pregunta más concreta o carga más documentos.</span></div>
   }
 
-  @if (results().length) {
+  @if (answer()) {
     <section class="results" aria-live="polite">
-      <div class="results-heading"><div><p class="eyebrow">RESULTADOS</p><h2>Fragmentos relevantes</h2></div><span>TOP 3 · HÍBRIDA</span></div>
-      @for (result of results(); track result.id) {
+      <div class="answer-card"><p class="eyebrow">RESPUESTA</p><p>{{ answer() }}</p></div>
+      <div class="results-heading"><div><p class="eyebrow">FUENTES</p><h2>Documentos consultados</h2></div><span>{{ sources().length }} FUENTES</span></div>
+      @for (result of sources(); track result.id) {
         <article class="result-card">
           <div class="rank">{{ $index + 1 | number: '2.0-0' }}</div>
           <div class="result-body"><div class="source-line"><strong>{{ sourceName(result.sourceFile) }}</strong><span>Relevancia {{ score(result.score) }}</span></div><p>{{ result.content }}</p></div>
