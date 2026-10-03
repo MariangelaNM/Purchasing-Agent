@@ -12,7 +12,8 @@ import { FileChunk, FileMaintenanceService } from '../../services/file-maintenan
 export class FileSearchComponent {
   private readonly fileService = inject(FileMaintenanceService);
   protected readonly query = signal('');
-  protected readonly results = signal<FileChunk[]>([]);
+  protected readonly answer = signal('');
+  protected readonly sources = signal<FileChunk[]>([]);
   protected readonly searching = signal(false);
   protected readonly searched = signal(false);
   protected readonly error = signal('');
@@ -24,23 +25,26 @@ export class FileSearchComponent {
   protected search(): void {
     const query = this.query().trim();
     if (!query) {
-      this.error.set('Escribe una consulta para buscar en los archivos.');
+      this.error.set('Escribe una pregunta para consultar el conocimiento cargado.');
       this.searched.set(false);
       return;
     }
 
     this.searching.set(true);
     this.searched.set(false);
+    this.answer.set('');
+    this.sources.set([]);
     this.error.set('');
-    this.fileService.search({ query, mode: 'Hybrid', top: 3 }).subscribe({
+    this.fileService.ask({ question: query, mode: 'Hybrid', top: 3 }).subscribe({
       next: results => {
-        this.results.set(results);
+        this.answer.set(results.answer);
+        this.sources.set(results.sources);
         this.searching.set(false);
         this.searched.set(true);
       },
       error: () => {
         this.searching.set(false);
-        this.error.set('No fue posible completar la búsqueda. Verifica que el API esté disponible.');
+        this.error.set('No fue posible responder la pregunta. Verifica que el API y el conocimiento estén disponibles.');
       }
     });
   }
