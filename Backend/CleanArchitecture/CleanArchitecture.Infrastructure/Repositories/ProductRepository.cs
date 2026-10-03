@@ -17,12 +17,12 @@ namespace CleanArchitecture.Infrastructure.Repositories
 
         public async Task<Product> GetByIdAsync(int id)
         {
-            return await _context.Products.FindAsync(id);
+            return await _context.Products.Include(p => p.Stock).FirstOrDefaultAsync(p => p.Id == id);
         }
 
         public async Task<IEnumerable<Product>> GetAllAsync()
         {
-            return await _context.Products.ToListAsync();
+            return await _context.Products.Include(p => p.Stock).ToListAsync();
         }
 
         public async Task<Product> AddAsync(Product product)

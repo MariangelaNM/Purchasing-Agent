@@ -18,26 +18,26 @@ namespace CleanArchitecture.Application.Services
         public async Task<ProductDto> GetByIdAsync(int id)
         {
             var product = await _productRepository.GetByIdAsync(id);
-            return new ProductDto(product.Id, product.Name, product.Description, product.Price);
+            return new ProductDto(product.Id, product.Name, product.Description, product.Price, product.Stock?.Quantity ?? 0);
         }
 
         public async Task<IEnumerable<ProductDto>> GetAllAsync()
         {
             var products = await _productRepository.GetAllAsync();
-            return products.Select(p => new ProductDto(p.Id, p.Name, p.Description, p.Price));
+            return products.Select(p => new ProductDto(p.Id, p.Name, p.Description, p.Price, p.Stock?.Quantity ?? 0));
         }
 
         public async Task<ProductDto> CreateAsync(CreateProductDto dto)
         {
-            var product = new Product(dto.Name, dto.Description, dto.Price);
+            var product = new Product(dto.Name, dto.Description, dto.Price, dto.Stock);
             var created = await _productRepository.AddAsync(product);
-            return new ProductDto(created.Id, created.Name, created.Description, created.Price);
+            return new ProductDto(created.Id, created.Name, created.Description, created.Price, created.Stock.Quantity);
         }
 
         public async Task UpdateAsync(int id, UpdateProductDto dto)
         {
             var product = await _productRepository.GetByIdAsync(id);
-            product.UpdateDetails(dto.Name, dto.Description, dto.Price);
+            product.UpdateDetails(dto.Name, dto.Description, dto.Price, dto.Stock);
             await _productRepository.UpdateAsync(product);
         }
 
