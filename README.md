@@ -4,7 +4,7 @@
 
 ### Base de datos de productos
 
-Ejecuta `Database/PurchasingDb.sql` en SQL Server Management Studio o Azure Data Studio. El script crea la base `PurchasingDb`, las tablas `Products` y `Stock` relacionadas por FK, y dos productos de ejemplo.
+Ejecuta `Database/PurchasingDb.sql` en SQL Server Management Studio o Azure Data Studio. El script crea la base `PurchasingDb`, las tablas `Products` y `Stocks` relacionadas por FK, y carga modelos de Lenovo, HP, Dell y Samsung basados en las fichas de `official-specifications`.
 
 La API usa por defecto:
 
