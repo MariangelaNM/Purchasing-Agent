@@ -30,5 +30,12 @@ public interface IChunkIndex
 
 public interface IAnswerGenerator
 {
-    Task<string> GenerateAsync(string question, IReadOnlyList<SearchResult> context, CancellationToken cancellationToken = default);
+    Task<GeneratedAnswer> GenerateAsync(
+        string question,
+        SearchMode mode,
+        int top,
+        CancellationToken cancellationToken = default
+    );
 }
+
+public sealed record GeneratedAnswer(string Answer, IReadOnlyList<SearchResult> Sources);

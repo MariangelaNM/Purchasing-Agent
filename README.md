@@ -68,6 +68,8 @@ POST /doc-chunks/_doc
 
 ### Models
 
+Las respuestas y cotizaciones se orquestan con Semantic Kernel. El conector oficial de Ollama utilizado por el proyecto es una dependencia prerelease.
+
 ```powershell
 ollama run nomic-embed-text:latest
 ```

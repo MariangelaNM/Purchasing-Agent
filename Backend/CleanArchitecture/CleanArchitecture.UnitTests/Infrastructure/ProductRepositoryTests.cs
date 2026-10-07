@@ -54,5 +54,23 @@ namespace CleanArchitecture.UnitTests.Infrastructure
             // Assert
             Assert.Equal(2, results.Count());
         }
+
+        [Fact]
+        public async Task GetBySpecificationFilesAsync_ShouldReturnOnlyRankedProducts()
+        {
+            using var context = new ApplicationDbContext(_dbContextOptions);
+            var repository = new ProductRepository(context);
+            await context.Products.AddRangeAsync(
+                new Product("Ranked", "Ficha oficial: ranked-spec.pdf", 1000m, 6),
+                new Product("Not ranked", "Ficha oficial: other-spec.pdf", 900m, 10)
+            );
+            await context.SaveChangesAsync();
+
+            var results = await repository.GetBySpecificationFilesAsync(["ranked-spec.pdf"]);
+
+            var product = Assert.Single(results);
+            Assert.Equal("Ranked", product.Name);
+            Assert.Equal(6, product.Stock.Quantity);
+        }
     }
 }
