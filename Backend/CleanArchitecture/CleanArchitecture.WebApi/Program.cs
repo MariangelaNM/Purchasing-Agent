@@ -53,7 +53,7 @@ builder.Services.AddScoped<ITextChunker, ParagraphTextChunker>();
 builder.Services.AddScoped<IDocumentFileReader, LocalDocumentFileReader>();
 builder.Services.AddScoped<IEmbeddingGenerator, OllamaEmbeddingGenerator>();
 builder.Services.AddScoped<IChunkIndex, ElasticsearchChunkIndex>();
-builder.Services.AddScoped<IAnswerGenerator, OllamaAnswerGenerator>();
+builder.Services.AddScoped<IAnswerGenerator, SemanticKernelAnswerGenerator>();
 builder.Services.AddScoped<IDocumentRagService, DocumentRagService>();
 
 var app = builder.Build();

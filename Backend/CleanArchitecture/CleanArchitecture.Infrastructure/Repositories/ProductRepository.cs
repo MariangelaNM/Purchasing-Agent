@@ -25,6 +25,19 @@ namespace CleanArchitecture.Infrastructure.Repositories
             return await _context.Products.Include(p => p.Stock).ToListAsync();
         }
 
+        public async Task<IEnumerable<Product>> GetBySpecificationFilesAsync(IEnumerable<string> sourceFiles)
+        {
+            var descriptions = sourceFiles
+                .Select(fileName => $"Ficha oficial: {fileName}")
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            return await _context.Products
+                .Include(p => p.Stock)
+                .Where(product => descriptions.Contains(product.Description))
+                .ToListAsync();
+        }
+
         public async Task<Product> AddAsync(Product product)
         {
             await _context.Products.AddAsync(product);

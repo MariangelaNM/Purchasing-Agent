@@ -1,8 +1,8 @@
 <main class="search-page">
   <header class="search-header">
-    <p class="eyebrow">ASK THE KNOWLEDGE</p>
+    <p class="eyebrow">CONSULTA DE CONOCIMIENTO</p>
     <h1>Pregunta a tu conocimiento</h1>
-    <p class="subtitle">Haz una pregunta sobre los documentos cargados y recibe una respuesta construida con sus fuentes.</p>
+    <p class="subtitle">Solicita una cotización y compara requisitos técnicos, precios y disponibilidad usando tus documentos y el inventario.</p>
   </header>
 
   <section class="search-panel" aria-label="Pregunta al conocimiento">
@@ -11,7 +11,7 @@
       <input
         type="search"
         autofocus
-        placeholder="Ej. ¿Cuáles son las condiciones de entrega?"
+        placeholder="Ej. Cotiza 6 laptops con 16 GB de RAM y 1 TB de almacenamiento"
         [value]="query()"
         (input)="updateQuery($event)"
         (keydown.enter)="search()"
@@ -23,7 +23,7 @@
   </section>
 
   @if (!searched() && !searching()) {
-    <div class="intro-state"><span class="intro-mark">?</span><strong>Tu respuesta aparecerá aquí</strong><span>Pregunta por políticas, productos o cualquier información de tus documentos.</span></div>
+    <div class="intro-state"><span class="intro-mark">?</span><strong>Tu cotización aparecerá aquí</strong><span>Indica cantidad y características, por ejemplo RAM, almacenamiento o procesador.</span></div>
   }
 
   @if (searched() && !answer()) {

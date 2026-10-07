@@ -94,18 +94,13 @@ public sealed class DocumentRagService(
     )
     {
         ValidateSearch(request.Question, request.Top);
-        var results = await chunkIndex.SearchAsync(
+        var generated = await answerGenerator.GenerateAsync(
             request.Question,
             request.Mode,
             request.Top,
             cancellationToken
         );
-        var answer = await answerGenerator.GenerateAsync(
-            request.Question,
-            results,
-            cancellationToken
-        );
-        return new AnswerQuestionResponse(answer, results.Select(ToResponse).ToList());
+        return new AnswerQuestionResponse(generated.Answer, generated.Sources.Select(ToResponse).ToList());
     }
 
     public async Task<IReadOnlyList<RetrievedChunkResponse>> ListChunksAsync(

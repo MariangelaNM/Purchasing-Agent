@@ -35,7 +35,7 @@ export class FileSearchComponent {
     this.answer.set('');
     this.sources.set([]);
     this.error.set('');
-    this.fileService.ask({ question: query, mode: 'Hybrid', top: 3 }).subscribe({
+    this.fileService.ask({ question: query, mode: 'Hybrid', top: 8 }).subscribe({
       next: results => {
         this.answer.set(results.answer);
         this.sources.set(results.sources);

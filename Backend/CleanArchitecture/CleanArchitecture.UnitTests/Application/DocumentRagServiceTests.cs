@@ -33,16 +33,21 @@ public sealed class DocumentRagServiceTests
     {
         var chunk = CreateChunk();
         var index = new FakeChunkIndex { SearchResults = [new SearchResult(chunk, 0.5)] };
+        var answerGenerator = new FakeAnswerGenerator("Grounded answer [1].");
         var service = new DocumentRagService(
             new FakeDocumentReader([]), new FakeChunker(), new FakeEmbeddingGenerator(), index,
-            new FakeAnswerGenerator("Grounded answer [1]."));
+            answerGenerator);
 
         var result = await service.AskAsync(new AskQuestionRequest("What is documented?"));
 
         Assert.Equal("Grounded answer [1].", result.Answer);
-        var source = Assert.Single(result.Sources);
+        Assert.Equal(2, result.Sources.Count);
+        var source = result.Sources[0];
         Assert.Equal(chunk.SourceFile, source.SourceFile);
         Assert.Equal(0.5, source.Score);
+        Assert.Equal("Inventario SQL", result.Sources[1].SourceFile);
+        Assert.Equal(SearchMode.Hybrid, answerGenerator.Mode);
+        Assert.Equal(8, answerGenerator.Top);
     }
 
     private static DocumentChunk CreateChunk() => new()
@@ -91,6 +96,32 @@ public sealed class DocumentRagServiceTests
 
     private sealed class FakeAnswerGenerator(string answer = "answer") : IAnswerGenerator
     {
-        public Task<string> GenerateAsync(string question, IReadOnlyList<SearchResult> context, CancellationToken cancellationToken = default) => Task.FromResult(answer);
+        public SearchMode Mode { get; private set; }
+        public int Top { get; private set; }
+
+        public Task<GeneratedAnswer> GenerateAsync(
+            string question,
+            SearchMode mode,
+            int top,
+            CancellationToken cancellationToken = default)
+        {
+            Mode = mode;
+            Top = top;
+            return Task.FromResult(new GeneratedAnswer(
+                answer,
+                [
+                    new SearchResult(CreateChunk(), 0.5),
+                    new SearchResult(
+                        new DocumentChunk
+                        {
+                            Id = "inventory-sql#0",
+                            SourceFile = "Inventario SQL",
+                            Ordinal = 0,
+                            Content = "Stock disponible: 6",
+                            Embedding = [],
+                        },
+                        1)
+                ]));
+        }
     }
 }

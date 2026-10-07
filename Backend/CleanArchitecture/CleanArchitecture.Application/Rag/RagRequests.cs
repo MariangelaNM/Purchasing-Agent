@@ -17,5 +17,5 @@ public sealed record SearchDocumentsRequest(
 public sealed record AskQuestionRequest(
     string Question,
     SearchMode Mode = SearchMode.Hybrid,
-    int Top = 3
+    int Top = 8
 );
