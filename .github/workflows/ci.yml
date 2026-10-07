@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, dev]
   pull_request:
-    branches: [main]
+    branches: [main, dev]
   workflow_dispatch:
 
 permissions:
@@ -43,6 +43,7 @@ jobs:
           dotnet test CleanArchitecture.sln
           --configuration Release
           --no-build
+          --no-restore
           --logger "trx;LogFileName=unit-tests.trx"
           --results-directory TestResults
 
@@ -56,9 +57,11 @@ jobs:
 
       - name: Verify API starts
         env:
+          ASPNETCORE_ENVIRONMENT: Development
+          ASPNETCORE_URLS: http://127.0.0.1:5117
           ConnectionStrings__DefaultConnection: ""
         run: |
-          dotnet run --project CleanArchitecture.WebApi --configuration Release --no-build --urls http://127.0.0.1:5117 > backend.log 2>&1 &
+          dotnet run --project CleanArchitecture.WebApi --configuration Release --no-build --no-launch-profile > backend.log 2>&1 &
           server_pid=$!
           trap 'kill "$server_pid" 2>/dev/null || true' EXIT
 
@@ -99,7 +102,7 @@ jobs:
         run: npm ci
 
       - name: Run tests
-        run: npm test -- --watch=false
+        run: npm run test:ci
 
       - name: Build
         run: npm run build
