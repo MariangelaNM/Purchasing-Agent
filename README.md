@@ -249,8 +249,8 @@ En otra terminal:
 
 ```powershell
 Set-Location Frontend/purchasing
-npm ci
-npm start
+npm i
+ng serve
 ```
 
 Abre `http://localhost:4200`.
