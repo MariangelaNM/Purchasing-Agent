@@ -217,20 +217,6 @@ ollama pull nomic-embed-text:latest
 ollama pull qwen2.5:1.5b-instruct
 ```
 
-Si Ollama no se inició como servicio o aplicación de escritorio:
-
-```powershell
-ollama serve
-```
-
-Verificación:
-
-```powershell
-Invoke-RestMethod http://localhost:11434/api/tags
-```
-
-El conector oficial de Semantic Kernel para Ollama utilizado por el proyecto es una dependencia prerelease.
-
 ### 5. Iniciar el backend
 
 ```powershell
